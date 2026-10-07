@@ -1,0 +1,119 @@
+(b)
+(b)
+(b)
+(b)
+(b)
+(b)
+(a)
+(b)
+(b)
+(b)
+section B
+B1
+SELECT c.city, SUM(o.amount) AS total_amount
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+GROUP BY c.city
+HAVING SUM(o.amount) > 1000
+ORDER BY total_amount DESC;
+
+output
+city	total_amount
+Mumbai	3650
+Delhi	3650
+
+B2
+(i)a.mean(axis=0) [25. 35. 45.]
+(ii)[30 40 50 60]
+
+B3
+B3: sales DataFrame
+
+(i) sales.isnull().sum().sum() gives 1. The only missing value is the np.nan in units.
+
+(ii) sales.dropna().shape gives (5, 6). The 6 rows drop to 5, and there are 6 columns.
+
+(iii) Fill the missing value with the median:
+
+
+sales['units'] = sales['units'].fillna(sales['units'].median())
+
+The median of [2, 4, 5, 8, 10] is 5.0, so the NaN becomes 5.0.
+
+B4
+
+import matplotlib.pyplot as plt
+
+plt.bar(region_units['region'], region_units['units'])
+plt.title("Units Sold by Region")
+plt.xlabel("Region")
+plt.ylabel("Units Sold")
+plt.show()
+
+B5
+
+Mistake 1: extract >> total() is wrong. total needs the data returned by extract. With the TaskFlow API, you pass the return value directly, and the dependency is created automatically:
+
+total(extract())
+
+Mistake 2: The last line, report_dag, only refers to the function and never calls it, so the DAG never gets registered. It should be:
+report_dag()
+
+section c
+
+C1.
+
+WITH cust_total AS (
+    SELECT c.name, SUM(o.amount) AS total
+    FROM customers c
+    JOIN orders o ON c.customer_id = o.customer_id
+    WHERE o.status IS NULL OR o.status <> 'Cancelled'
+    GROUP BY c.customer_id, c.name
+)
+SELECT name, total
+FROM cust_total
+WHERE total > (SELECT AVG(total) FROM cust_total)
+ORDER BY total DESC;
+
+Average = 1625
+
+name    total
+Rahul   2350
+Vikram  2000
+Priya   1650
+
+
+C2.
+
+(a)
+sales['region'] = sales['region'].str.strip().str.title()
+
+(b)
+sales['units'] = sales['units'].fillna(sales['units'].median())
+
+(c)
+sales['revenue'] = sales['units'] * sales['price']
+sales['order_date'] = pd.to_datetime(sales['order_date'])
+sales['month'] = sales['order_date'].dt.month_name()
+
+(d)
+region_rev = sales.groupby('region')['revenue'].sum().sort_values(ascending=False)
+print(region_rev)
+
+Output:
+region
+South    2300.0
+East     1480.0
+North     300.0
+Name: revenue, dtype: float64
+
+(e)
+pivot = sales.pivot_table(index='region', columns='product', values='revenue', aggfunc='sum', fill_value=0)
+sns.barplot(x=region_rev.index, y=region_rev.values)
+plt.title("Revenue by Region")
+plt.xlabel("Region")
+plt.ylabel("Revenue")
+plt.show()
+
+
+
